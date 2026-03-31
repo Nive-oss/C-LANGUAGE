@@ -1,0 +1,105 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAXN 100005
+#define LOG 18
+
+typedef struct Node {
+    int to;
+    struct Node* next;
+} Node;
+
+Node* adj[MAXN];
+int parent[MAXN], guards[MAXN];
+int up[MAXN][LOG];
+long long path_sum[MAXN][LOG];
+
+void add_edge(int u, int v) {
+    Node* newNode = (Node*)malloc(sizeof(Node));
+    newNode->to = v;
+    newNode->next = adj[u];
+    adj[u] = newNode;
+}
+
+
+void bfs(int n) {
+    int queue[MAXN], head = 0, tail = 0;
+    int visited[MAXN] = {0};
+    
+    queue[tail++] = 1;
+    visited[1] = 1;
+    parent[1] = 0;
+
+    while (head < tail) {
+        int u = queue[head++];
+        for (Node* curr = adj[u]; curr; curr = curr->next) {
+            if (!visited[curr->to]) {
+                visited[curr->to] = 1;
+                parent[curr->to] = u;
+                queue[tail++] = curr->to;
+            }
+        }
+    }
+}
+
+void solve() {
+    int N;
+    if (scanf("%d", &N) != 1) return;
+
+    for (int i = 1; i <= N; i++) adj[i] = NULL;
+
+    for (int i = 0; i < N - 1; i++) {
+        int u, v;
+        scanf("%d %d", &u, &v);
+        add_edge(u, v);
+        add_edge(v, u);
+    }
+
+    for (int i = 1; i <= N; i++) scanf("%d", &guards[i]);
+
+    bfs(N);
+
+   
+    for (int i = 1; i <= N; i++) {
+        up[i][0] = parent[i];
+        path_sum[i][0] = guards[i]; 
+    }
+
+    for (int j = 1; j < LOG; j++) {
+        for (int i = 1; i <= N; i++) {
+            if (up[i][j - 1] != 0) {
+                up[i][j] = up[up[i][j - 1]][j - 1];
+                path_sum[i][j] = path_sum[i][j - 1] + path_sum[up[i][j - 1]][j - 1];
+            } else {
+                up[i][j] = 0;
+                path_sum[i][j] = path_sum[i][j - 1];
+            }
+        }
+    }
+
+    int Q;
+    scanf("%d", &Q);
+    while (Q--) {
+        int u, rebels;
+        scanf("%d %d", &u, &rebels);
+
+        int curr = u;
+        long long current_rebels = rebels;
+
+        // Use binary lifting to jump as high as possible
+        for (int j = LOG - 1; j >= 0; j--) {
+            if (up[curr][j] != 0 && path_sum[curr][j] < current_rebels) {
+                current_rebels -= path_sum[curr][j];
+                curr = up[curr][j];
+            }
+        }
+        printf("%d\n", curr);
+    }
+}
+
+int main() {
+    int T;
+    if (scanf("%d", &T) != 1) return 0;
+    while (T--) solve();
+    return 0;
+}
