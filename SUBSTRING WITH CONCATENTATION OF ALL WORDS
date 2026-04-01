@@ -1,0 +1,99 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+/**
+ * Note: The returned array must be malloced, assume caller calls free().
+ */
+int* findSubstring(char* s, char** words, int wordsSize, int* returnSize) {
+    int s_len = strlen(s);
+    int word_len = strlen(words[0]);
+    int total_len = word_len * wordsSize;
+    *returnSize = 0;
+
+    if (s_len < total_len) return NULL;
+
+    int* res = (int*)malloc(sizeof(int) * s_len);
+    
+    // Simple hash table structure to store word frequencies
+    typedef struct {
+        char* word;
+        int count;
+    } WordFreq;
+
+    // 1. Build initial frequency map of words
+    WordFreq* map = (WordFreq*)malloc(sizeof(WordFreq) * wordsSize);
+    int mapSize = 0;
+    for (int i = 0; i < wordsSize; i++) {
+        int found = 0;
+        for (int j = 0; j < mapSize; j++) {
+            if (strcmp(words[i], map[j].word) == 0) {
+                map[j].count++;
+                found = 1;
+                break;
+            }
+        }
+        if (!found) {
+            map[mapSize].word = words[i];
+            map[mapSize].count = 1;
+            mapSize++;
+        }
+    }
+
+    // 2. Sliding window for each possible starting offset
+    int* current_counts = (int*)malloc(sizeof(int) * mapSize);
+
+    for (int i = 0; i < word_len; i++) {
+        int left = i, right = i, count = 0;
+        memset(current_counts, 0, sizeof(int) * mapSize);
+
+        while (right + word_len <= s_len) {
+            char temp[word_len + 1];
+            strncpy(temp, s + right, word_len);
+            temp[word_len] = '\0';
+            right += word_len;
+
+            int wordIdx = -1;
+            for (int j = 0; j < mapSize; j++) {
+                if (strcmp(temp, map[j].word) == 0) {
+                    wordIdx = j;
+                    break;
+                }
+            }
+
+            if (wordIdx != -1) {
+                current_counts[wordIdx]++;
+                count++;
+                
+                // If word count exceeds allowed, shrink from left
+                while (current_counts[wordIdx] > map[wordIdx].count) {
+                    char left_temp[word_len + 1];
+                    strncpy(left_temp, s + left, word_len);
+                    left_temp[word_len] = '\0';
+                    
+                    for (int j = 0; j < mapSize; j++) {
+                        if (strcmp(left_temp, map[j].word) == 0) {
+                            current_counts[j]--;
+                            count--;
+                            break;
+                        }
+                    }
+                    left += word_len;
+                }
+
+                if (count == wordsSize) {
+                    res[(*returnSize)++] = left;
+                }
+            } else {
+                // Word not found, reset window
+                memset(current_counts, 0, sizeof(int) * mapSize);
+                count = 0;
+                left = right;
+            }
+        }
+    }
+
+    free(map);
+    free(current_counts);
+    return res;
+}
