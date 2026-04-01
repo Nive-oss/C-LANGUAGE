@@ -1,0 +1,28 @@
+
+struct ListNode* reverseKGroup(struct ListNode* head, int k) {
+    
+    struct ListNode* curr = head;
+    for (int i = 0; i < k; i++) {
+        if (!curr) return head; 
+        curr = curr->next;
+    }
+
+    
+    struct ListNode* prev = NULL;
+    struct ListNode* next = NULL;
+    curr = head;
+    for (int i = 0; i < k; i++) {
+        next = curr->next;
+        curr->next = prev;
+        prev = curr;
+        curr = next;
+    }
+
+    // 3. Connect the reversed group to the next recursive call
+    if (next != NULL) {
+        head->next = reverseKGroup(next, k);
+    }
+
+    
+    return prev;
+}
