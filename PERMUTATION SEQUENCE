@@ -1,0 +1,41 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+char* getPermutation(int n, int k) {
+    int i, j;
+    int factorials[10];
+    int digits[10];
+    
+    // Precompute factorials
+    factorials[0] = 1;
+    for (i = 1; i < n; i++) {
+        factorials[i] = factorials[i - 1] * i;
+    }
+
+    // Initialize available digits
+    for (i = 0; i < n; i++) {
+        digits[i] = i + 1;
+    }
+
+    char* result = (char*)malloc((n + 1) * sizeof(char));
+    result[n] = '\0';
+
+    k--; // 0-indexed
+
+    for (i = 0; i < n; i++) {
+        int factIdx = n - 1 - i;
+        int groupSize = (factIdx == 0) ? 1 : factorials[factIdx];
+        
+        int digitIdx = k / groupSize;
+        result[i] = digits[digitIdx] + '0';
+
+        // Shift digits to "remove" the used one
+        for (j = digitIdx; j < n - 1 - i; j++) {
+            digits[j] = digits[j + 1];
+        }
+
+        k %= groupSize;
+    }
+
+    return result;
+}
