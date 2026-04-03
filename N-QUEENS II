@@ -1,0 +1,42 @@
+#include <stdbool.h>
+
+/**
+ * Recursive function to count valid N-Queens placements.
+ * @param row: Current row we are trying to place a queen in.
+ * @param n: Total number of rows/queens.
+ * @param cols: Array tracking which columns are under attack.
+ * @param d1: Array tracking which "forward-slash" diagonals (r+c) are under attack.
+ * @param d2: Array tracking which "back-slash" diagonals (r-c+n-1) are under attack.
+ */
+int backtrack(int row, int n, bool* cols, bool* d1, bool* d2) {
+    if (row == n) {
+        return 1; // Found one valid solution
+    }
+
+    int count = 0;
+    for (int col = 0; col < n; col++) {
+        int id1 = row + col;
+        int id2 = row - col + n - 1;
+
+        if (!cols[col] && !d1[id1] && !d2[id2]) {
+            // Place Queen
+            cols[col] = d1[id1] = d2[id2] = true;
+            
+            // Recurse to next row
+            count += backtrack(row + 1, n, cols, d1, d2);
+            
+            // Backtrack
+            cols[col] = d1[id1] = d2[id2] = false;
+        }
+    }
+    return count;
+}
+
+int totalNQueens(int n) {
+    // Auxiliary arrays to track attacks in O(1)
+    bool cols[10] = {false};      // Max n is 9
+    bool d1[20] = {false};        // Max diagonals are 2n-1
+    bool d2[20] = {false};
+
+    return backtrack(0, n, cols, d1, d2);
+}
