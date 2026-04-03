@@ -1,0 +1,45 @@
+#include <stdbool.h>
+#include <ctype.h>
+
+bool isNumber(char * s) {
+    bool seenDigit = false;
+    bool seenDot = false;
+    bool seenExponent = false;
+
+    for (int i = 0; s[i] != '\0'; i++) {
+        char c = s[i];
+
+        if (isdigit(c)) {
+            seenDigit = true;
+        } 
+        else if (c == '+' || c == '-') {
+            // Sign can only be at index 0 OR right after an exponent
+            if (i > 0 && s[i-1] != 'e' && s[i-1] != 'E') {
+                return false;
+            }
+        } 
+        else if (c == '.') {
+            // Dot is invalid if we've already seen a dot OR an exponent
+            if (seenDot || seenExponent) {
+                return false;
+            }
+            seenDot = true;
+        } 
+        else if (c == 'e' || c == 'E') {
+            // Exponent is invalid if already seen OR if no digits seen yet
+            if (seenExponent || !seenDigit) {
+                return false;
+            }
+            seenExponent = true;
+            seenDigit = false; // Reset digit flag: exponent must be followed by digits
+        } 
+        else {
+            // Any other character (like 'a') is invalid
+            return false;
+        }
+    }
+
+    // The string is valid only if at least one digit was seen (handles cases like "." or "e")
+    // and if the exponent (if present) was followed by a digit.
+    return seenDigit;
+}
