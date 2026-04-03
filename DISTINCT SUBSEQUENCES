@@ -1,0 +1,36 @@
+#include <string.h>
+#include <stdlib.h>
+
+/**
+ * Returns the number of distinct subsequences of s that equal t.
+ * Time Complexity: O(m * n) where m = len(s), n = len(t).
+ * Space Complexity: O(n) using 1D space optimization.
+ */
+int numDistinct(char * s, char * t) {
+    int m = strlen(s);
+    int n = strlen(t);
+    
+    // If t is longer than s, it's impossible to form t as a subsequence.
+    if (m < n) return 0;
+
+    // Use unsigned long long for internal calculations to handle intermediate 
+    // overflow, though the final answer is guaranteed to fit in a 32-bit int.
+    unsigned long long *dp = (unsigned long long *)calloc(n + 1, sizeof(unsigned long long));
+    
+    // Base case: empty t can be formed from any s once.
+    dp[0] = 1;
+
+    for (int i = 1; i <= m; i++) {
+        // Iterate backwards through dp array to use results from the previous 'i'
+        for (int j = n; j >= 1; j--) {
+            if (s[i - 1] == t[j - 1]) {
+                dp[j] = dp[j] + dp[j - 1];
+            }
+            // else: dp[j] remains dp[j] from the previous s-character (i-1)
+        }
+    }
+
+    int result = (int)dp[n];
+    free(dp);
+    return result;
+}
