@@ -1,0 +1,70 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+
+/**
+ * Global pointers to store results. 
+ * In a platform like LeetCode, these are handled via the return pointers.
+ */
+void backtrack(int row, int n, int* queens, bool* cols, bool* diag1, bool* diag2, 
+               char*** results, int* returnSize) {
+    if (row == n) {
+        // Create a new board configuration
+        results[*returnSize] = (char**)malloc(n * sizeof(char*));
+        for (int i = 0; i < n; i++) {
+            results[*returnSize][i] = (char*)malloc((n + 1) * sizeof(char));
+            for (int j = 0; j < n; j++) {
+                results[*returnSize][i][j] = (queens[i] == j) ? 'Q' : '.';
+            }
+            results[*returnSize][i][n] = '\0';
+        }
+        (*returnSize)++;
+        return;
+    }
+
+    for (int col = 0; col < n; col++) {
+        int d1 = row + col;
+        int d2 = row - col + (n - 1);
+        
+        if (!cols[col] && !diag1[d1] && !diag2[d2]) {
+            // Place Queen
+            queens[row] = col;
+            cols[col] = diag1[d1] = diag2[d2] = true;
+            
+            backtrack(row + 1, n, queens, cols, diag1, diag2, results, returnSize);
+            
+            // Backtrack
+            cols[col] = diag1[d1] = diag2[d2] = false;
+        }
+    }
+}
+
+/**
+ * n: The number of queens.
+ * returnSize: Pointer to the number of solutions found.
+ * returnColumnSizes: Pointer to an array containing the number of rows for each solution.
+ */
+char*** solveNQueens(int n, int* returnSize, int** returnColumnSizes) {
+    // 1000 is a safe upper bound for n <= 9
+    char*** results = (char***)malloc(1000 * sizeof(char**));
+    *returnSize = 0;
+
+    int* queens = (int*)malloc(n * sizeof(int));
+    bool* cols = (bool*)calloc(n, sizeof(bool));
+    bool* diag1 = (bool*)calloc(2 * n, sizeof(bool));
+    bool* diag2 = (bool*)calloc(2 * n, sizeof(bool));
+
+    backtrack(0, n, queens, cols, diag1, diag2, results, returnSize);
+
+    // Set the column sizes (each solution has n rows)
+    *returnColumnSizes = (int*)malloc((*returnSize) * sizeof(int));
+    for (int i = 0; i < *returnSize; i++) {
+        (*returnColumnSizes)[i] = n;
+    }
+
+    // Clean up temporary tracking arrays
+    free(queens); free(cols); free(diag1); free(diag2);
+
+    return results;
+}
