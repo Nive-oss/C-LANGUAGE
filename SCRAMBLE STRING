@@ -1,0 +1,67 @@
+#include <stdbool.h>
+#include <string.h>
+#include <stdlib.h>
+
+/**
+ * Checks if s2 is a scrambled string of s1.
+ * Time Complexity: O(n^4) - Four nested loops (length, i, j, split point).
+ * Space Complexity: O(n^3) - A 3D array to store results for dp[len][i][j].
+ */
+bool isScramble(char * s1, char * s2) {
+    int n = strlen(s1);
+    if (n == 0) return true;
+    if (strcmp(s1, s2) == 0) return true;
+
+    // dp[k][i][j] means s1[i...i+k-1] can be scrambled to s2[j...j+k-1]
+    // We use a 1D array to simulate 3D for better memory control in C
+    bool ***dp = (bool ***)malloc((n + 1) * sizeof(bool **));
+    for (int k = 0; k <= n; k++) {
+        dp[k] = (bool **)malloc(n * sizeof(bool *));
+        for (int i = 0; i < n; i++) {
+            dp[k][i] = (bool *)calloc(n, sizeof(bool));
+        }
+    }
+
+    // Base case: substrings of length 1
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            dp[1][i][j] = (s1[i] == s2[j]);
+        }
+    }
+
+    // Build DP table for lengths k from 2 to n
+    for (int k = 2; k <= n; k++) {
+        for (int i = 0; i <= n - k; i++) {
+            for (int j = 0; j <= n - k; j++) {
+                // Try every possible split point 'w'
+                for (int w = 1; w < k; w++) {
+                    // Scenario 1: No swap
+                    // s1 split: [i, i+w-1] and [i+w, i+k-1]
+                    // s2 split: [j, j+w-1] and [j+w, j+k-1]
+                    if (dp[w][i][j] && dp[k - w][i + w][j + w]) {
+                        dp[k][i][j] = true;
+                        break;
+                    }
+                    // Scenario 2: Swap
+                    // s1 split: [i, i+w-1] and [i+w, i+k-1]
+                    // s2 split: [j+k-w, j+k-1] and [j, j+k-w-1]
+                    if (dp[w][i][j + k - w] && dp[k - w][i + w][j]) {
+                        dp[k][i][j] = true;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    bool result = dp[n][0][0];
+
+    // Free allocated memory
+    for (int k = 0; k <= n; k++) {
+        for (int i = 0; i < n; i++) free(dp[k][i]);
+        free(dp[k]);
+    }
+    free(dp);
+
+    return result;
+}
