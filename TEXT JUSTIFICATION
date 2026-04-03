@@ -1,0 +1,72 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+/**
+ * Note: The returned array must be malloced, assume caller calls free().
+ */
+char** fullJustify(char** words, int wordsSize, int maxWidth, int* returnSize) {
+    char** result = (char**)malloc(sizeof(char*) * wordsSize);
+    int resIdx = 0;
+    int i = 0;
+
+    while (i < wordsSize) {
+        int j = i + 1;
+        int lineChars = strlen(words[i]);
+        
+        // 1. Greedy: Find how many words fit in the current line
+        while (j < wordsSize && lineChars + 1 + strlen(words[j]) <= maxWidth) {
+            lineChars += 1 + strlen(words[j]);
+            j++;
+        }
+
+        int numWords = j - i;
+        char* line = (char*)malloc(sizeof(char) * (maxWidth + 1));
+        int currPos = 0;
+
+        // 2. Case: Last line or only one word in the line (Left Justify)
+        if (j == wordsSize || numWords == 1) {
+            for (int k = i; k < j; k++) {
+                int len = strlen(words[k]);
+                memcpy(line + currPos, words[k], len);
+                currPos += len;
+                if (currPos < maxWidth) {
+                    line[currPos++] = ' ';
+                }
+            }
+            while (currPos < maxWidth) {
+                line[currPos++] = ' ';
+            }
+        } 
+        // 3. Case: Fully Justify
+        else {
+            int totalWordChars = 0;
+            for (int k = i; k < j; k++) totalWordChars += strlen(words[k]);
+            
+            int totalSpaces = maxWidth - totalWordChars;
+            int gaps = numWords - 1;
+            int spacesPerGap = totalSpaces / gaps;
+            int extraSpaces = totalSpaces % gaps;
+
+            for (int k = i; k < j; k++) {
+                int len = strlen(words[k]);
+                memcpy(line + currPos, words[k], len);
+                currPos += len;
+
+                if (k < j - 1) {
+                    int spacesToApply = spacesPerGap + (extraSpaces-- > 0 ? 1 : 0);
+                    for (int s = 0; s < spacesToApply; s++) {
+                        line[currPos++] = ' ';
+                    }
+                }
+            }
+        }
+
+        line[maxWidth] = '\0';
+        result[resIdx++] = line;
+        i = j; // Move to next set of words
+    }
+
+    *returnSize = resIdx;
+    return result;
+}
