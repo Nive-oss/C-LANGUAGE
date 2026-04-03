@@ -1,0 +1,45 @@
+#include <stdbool.h>
+
+/**
+ * Implements wildcard pattern matching with support for '?' and '*'.
+ * Time Complexity: O(sLen * pLen) worst case, but near O(sLen + pLen) on average.
+ * Space Complexity: O(1) - No extra DP table used.
+ */
+bool isMatch(char * s, char * p) {
+    int s_ptr = 0, p_ptr = 0;
+    int match_idx = 0, star_idx = -1;
+
+    // Iterate through the string s
+    while (s[s_ptr] != '\0') {
+        // Case 1: Characters match or pattern has '?'
+        if (p[p_ptr] == '?' || s[s_ptr] == p[p_ptr]) {
+            s_ptr++;
+            p_ptr++;
+        }
+        // Case 2: Pattern has '*', record the position and try matching 0 chars
+        else if (p[p_ptr] == '*') {
+            star_idx = p_ptr;
+            match_idx = s_ptr;
+            p_ptr++;
+        }
+        // Case 3: Current chars don't match, but a previous '*' was found
+        // Backtrack: assume the '*' matches one more character in s
+        else if (star_idx != -1) {
+            p_ptr = star_idx + 1;
+            match_idx++;
+            s_ptr = match_idx;
+        }
+        // Case 4: No match and no '*' to backtrack to
+        else {
+            return false;
+        }
+    }
+
+    // After s is exhausted, check if remaining pattern chars are all '*'
+    while (p[p_ptr] == '*') {
+        p_ptr++;
+    }
+
+    // If we reached the end of the pattern, it's a match
+    return p[p_ptr] == '\0';
+}
