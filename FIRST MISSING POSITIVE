@@ -1,0 +1,31 @@
+#include <stdio.h>
+
+/**
+ * Returns the smallest positive integer not present in nums.
+ * Time Complexity: O(n) - Each element is moved to its correct position at most once.
+ * Space Complexity: O(1) - Sorting is done in-place.
+ */
+int firstMissingPositive(int* nums, int numsSize) {
+    if (numsSize == 0) return 1;
+
+    for (int i = 0; i < numsSize; i++) {
+        
+        while (nums[i] > 0 && nums[i] <= numsSize && nums[nums[i] - 1] != nums[i]) {
+            // Swap nums[i] with nums[nums[i] - 1]
+            int targetIndex = nums[i] - 1;
+            int temp = nums[targetIndex];
+            nums[targetIndex] = nums[i];
+            nums[i] = temp;
+        }
+    }
+
+    // Second pass: Find the first index where the value is incorrect.
+    for (int i = 0; i < numsSize; i++) {
+        if (nums[i] != i + 1) {
+            return i + 1;
+        }
+    }
+
+    // If the array is [1, 2, ..., n], the missing positive is n + 1.
+    return numsSize + 1;
+}
