@@ -1,0 +1,32 @@
+#include <stdio.h>
+#include <string.h>
+
+void solve() {
+    char s[1000005]; // Adjust size based on string constraints if known
+    if (scanf("%s", s) != 1) return;
+
+    int counts[26] = {0};
+    int len = strlen(s);
+
+    // Count occurrences of each character
+    for (int i = 0; i < len; i++) {
+        counts[s[i] - 'a']++;
+    }
+
+    int max_palindromes = 0;
+    // For each character, the number of pairs is count / 2
+    for (int i = 0; i < 26; i++) {
+        max_palindromes += counts[i] / 2;
+    }
+
+    printf("%d\n", max_palindromes);
+}
+
+int main() {
+    int t;
+    if (scanf("%d", &t) != 1) return 0;
+    while (t--) {
+        solve();
+    }
+    return 0;
+}
