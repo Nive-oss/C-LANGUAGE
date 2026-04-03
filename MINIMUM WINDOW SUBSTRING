@@ -1,0 +1,51 @@
+#include <stdio.h>
+#include <string.h>
+#include <limits.h>
+
+char* minWindow(char* s, char* t) {
+    int sLen = strlen(s);
+    int tLen = strlen(t);
+    if (sLen < tLen) return "";
+
+    int map[128] = {0}; // To store frequency of chars in t
+    for (int i = 0; i < tLen; i++) map[(int)t[i]]++;
+
+    int left = 0, right = 0;
+    int minLen = INT_MAX;
+    int startIdx = 0;
+    int required = tLen; // Number of characters still needed
+
+    while (right < sLen) {
+        // If s[right] is a character we need, decrease required count
+        if (map[(int)s[right]] > 0) required--;
+        
+        // Decrease the frequency in map (negative means extra chars)
+        map[(int)s[right]]--;
+        right++;
+
+        // When we have a valid window
+        while (required == 0) {
+            // Update minimum window
+            if (right - left < minLen) {
+                minLen = right - left;
+                startIdx = left;
+            }
+
+            // Try to shrink from the left
+            map[(int)s[left]]++;
+            // If the char we just removed was essential, increase required
+            if (map[(int)s[left]] > 0) required++;
+            
+            left++;
+        }
+    }
+
+    if (minLen == INT_MAX) return "";
+
+    // Reuse s to return the substring or allocate new memory
+    // In LeetCode/Standard C, we usually return a newly allocated string
+    char* result = (char*)malloc(sizeof(char) * (minLen + 1));
+    strncpy(result, s + startIdx, minLen);
+    result[minLen] = '\0';
+    return result;
+}
