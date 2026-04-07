@@ -1,0 +1,25 @@
+#include <stdio.h>
+
+int countDigitOne(int n) {
+    if (n <= 0) return 0;
+    
+    long long count = 0;
+    // Iterate through each digit place: 1, 10, 100, 1000...
+    for (long long i = 1; i <= n; i *= 10) {
+        long long divider = i * 10;
+        
+        // Full groups of 'divider' size contribute 'i' ones at this position
+        count += (n / divider) * i;
+        
+        // Handle the remaining partial group
+        long long remainder = n % divider;
+        if (remainder >= i) {
+            // If the digit at this position is > 1, add the full 'i'
+            // If the digit is 1, add the trailing numbers + 1
+            long long extra = (remainder < 2 * i) ? (remainder - i + 1) : i;
+            count += extra;
+        }
+    }
+    
+    return (int)count;
+}
