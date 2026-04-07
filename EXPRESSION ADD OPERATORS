@@ -1,0 +1,60 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+void backtrack(char* num, int target, int index, long currentVal, long lastVal, char* path, int pathLen, char** res, int* resCount) {
+    int n = strlen(num);
+    if (index == n) {
+        if (currentVal == (long)target) {
+            res[*resCount] = strdup(path);
+            (*resCount)++;
+        }
+        return;
+    }
+
+    for (int i = index; i < n; i++) {
+        // Handle leading zeros: "05" is invalid, but "0" is fine.
+        if (i > index && num[index] == '0') break;
+
+        // Extract the current operand
+        int len = i - index + 1;
+        char part[12]; // num length is max 10
+        strncpy(part, num + index, len);
+        part[len] = '\0';
+        long val = atol(part);
+
+        if (index == 0) {
+            // First number, no operator
+            strcpy(path, part);
+            backtrack(num, target, i + 1, val, val, path, len, res, resCount);
+        } else {
+            // Addition
+            sprintf(path + pathLen, "+%s", part);
+            backtrack(num, target, i + 1, currentVal + val, val, path, pathLen + len + 1, res, resCount);
+            
+            // Subtraction
+            sprintf(path + pathLen, "-%s", part);
+            backtrack(num, target, i + 1, currentVal - val, -val, path, pathLen + len + 1, res, resCount);
+            
+            // Multiplication
+            sprintf(path + pathLen, "*%s", part);
+            backtrack(num, target, i + 1, currentVal - lastVal + (lastVal * val), lastVal * val, path, pathLen + len + 1, res, resCount);
+        }
+        // Backtrack: reset path length
+        path[pathLen] = '\0';
+    }
+}
+
+char** addOperators(char* num, int target, int* returnSize) {
+    // Max possibilities can be high; 20000 is a safe estimate for len 10
+    char** res = malloc(sizeof(char*) * 20000);
+    char* path = malloc(sizeof(char) * 100);
+    *returnSize = 0;
+
+    if (num == NULL || strlen(num) == 0) return res;
+
+    backtrack(num, target, 0, 0, 0, path, 0, res, returnSize);
+
+    free(path);
+    return res;
+}
