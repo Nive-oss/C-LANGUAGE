@@ -1,0 +1,100 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct {
+    int r, c, h;
+} Tree;
+
+// Comparator to sort trees by height
+int compareTrees(const void* a, const void* b) {
+    return ((Tree*)a)->h - ((Tree*)b)->h;
+}
+
+// BFS to find the shortest distance between (sr, sc) and (tr, tc)
+int bfs(int** forest, int m, int n, int sr, int sc, int tr, int tc) {
+    if (sr == tr && sc == tc) return 0;
+    
+    int dr[] = {-1, 1, 0, 0};
+    int dc[] = {0, 0, -1, 1};
+    
+    // Visited array
+    int** visited = (int**)calloc(m, sizeof(int*));
+    for (int i = 0; i < m; i++) visited[i] = (int*)calloc(n, sizeof(int));
+    
+    // Queue for BFS: store row * n + col
+    int* queue = (int*)malloc(m * n * sizeof(int));
+    int head = 0, tail = 0;
+    
+    queue[tail++] = sr * n + sc;
+    visited[sr][sc] = 1;
+    int steps = 0;
+    
+    while (head < tail) {
+        int size = tail - head;
+        steps++;
+        while (size--) {
+            int curr = queue[head++];
+            int r = curr / n;
+            int c = curr % n;
+            
+            for (int i = 0; i < 4; i++) {
+                int nr = r + dr[i];
+                int nc = c + dc[i];
+                
+                if (nr >= 0 && nr < m && nc >= 0 && nc < n && forest[nr][nc] != 0 && !visited[nr][nc]) {
+                    if (nr == tr && nc == tc) {
+                        // Cleanup memory
+                        for (int k = 0; k < m; k++) free(visited[k]);
+                        free(visited);
+                        free(queue);
+                        return steps;
+                    }
+                    visited[nr][nc] = 1;
+                    queue[tail++] = nr * n + nc;
+                }
+            }
+        }
+    }
+    
+    // Cleanup memory
+    for (int k = 0; k < m; k++) free(visited[k]);
+    free(visited);
+    free(queue);
+    return -1;
+}
+
+int cutOffTree(int** forest, int forestSize, int* forestColSize) {
+    int m = forestSize;
+    int n = forestColSize[0];
+    Tree trees[m * n];
+    int treeCount = 0;
+    
+    // 1. Collect all trees
+    for (int i = 0; i < m; i++) {
+        for (int j = 0; j < n; j++) {
+            if (forest[i][j] > 1) {
+                trees[treeCount].r = i;
+                trees[treeCount].c = j;
+                trees[treeCount].h = forest[i][j];
+                treeCount++;
+            }
+        }
+    }
+    
+    // 2. Sort trees by height
+    qsort(trees, treeCount, sizeof(Tree), compareTrees);
+    
+    // 3. Move from (0,0) to each tree in order
+    int totalSteps = 0;
+    int currR = 0, currC = 0;
+    
+    for (int i = 0; i < treeCount; i++) {
+        int d = bfs(forest, m, n, currR, currC, trees[i].r, trees[i].c);
+        if (d == -1) return -1;
+        totalSteps += d;
+        currR = trees[i].r;
+        currC = trees[i].c;
+    }
+    
+    return totalSteps;
+}
