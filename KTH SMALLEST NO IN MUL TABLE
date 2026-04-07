@@ -1,0 +1,29 @@
+// Helper function to count elements <= x in the m x n table
+long long countLessEqual(long long x, int m, int n) {
+    long long count = 0;
+    for (int i = 1; i <= m; i++) {
+        // Elements in row i are i, 2i, 3i... up to ni
+        // Number of elements <= x in this row is x/i, capped at n
+        long long rowCount = x / i;
+        if (rowCount > n) rowCount = n;
+        count += rowCount;
+    }
+    return count;
+}
+
+int findKthNumber(int m, int n, int k) {
+    long long low = 1;
+    long long high = (long long)m * n;
+    long long result = high;
+
+    while (low <= high) {
+        long long mid = low + (high - low) / 2;
+        if (countLessEqual(mid, m, n) >= k) {
+            result = mid; // Potential answer, look for smaller
+            high = mid - 1;
+        } else {
+            low = mid + 1; // Need a larger value
+        }
+    }
+    return (int)result;
+}
