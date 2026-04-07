@@ -1,0 +1,56 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+const char* LESS_THAN_20[] = {"", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"};
+const char* TENS[] = {"", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"};
+const char* THOUSANDS[] = {"", "Thousand", "Million", "Billion"};
+
+void helper(int num, char* res) {
+    if (num == 0) return;
+    
+    char temp[256] = "";
+    if (num < 20) {
+        sprintf(temp, "%s ", LESS_THAN_20[num]);
+    } else if (num < 100) {
+        sprintf(temp, "%s ", TENS[num / 10]);
+        helper(num % 10, temp + strlen(temp));
+    } else {
+        sprintf(temp, "%s Hundred ", LESS_THAN_20[num / 100]);
+        helper(num % 100, temp + strlen(temp));
+    }
+    strcat(res, temp);
+}
+
+char* numberToWords(int num) {
+    if (num == 0) return "Zero";
+
+    char* res = (char*)calloc(1024, sizeof(char));
+    int i = 0;
+
+    // Process groups of 3 digits from right to left
+    // We use a temporary stack-like approach or process billions first
+    int groups[4]; // 0: unit, 1: thousand, 2: million, 3: billion
+    for (int j = 0; j < 4; j++) {
+        groups[j] = num % 1000;
+        num /= 1000;
+    }
+
+    for (int j = 3; j >= 0; j--) {
+        if (groups[j] != 0) {
+            char group_res[256] = "";
+            helper(groups[j], group_res);
+            strcat(res, group_res);
+            if (j > 0) {
+                strcat(res, THOUSANDS[j]);
+                strcat(res, " ");
+            }
+        }
+    }
+
+    // Trim trailing space
+    int len = strlen(res);
+    if (len > 0 && res[len - 1] == ' ') res[len - 1] = '\0';
+
+    return res;
+}
