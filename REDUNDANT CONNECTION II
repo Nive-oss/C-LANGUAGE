@@ -1,0 +1,67 @@
+#include <stdlib.h>
+#include <stdio.h>
+
+int find(int* parent, int i) {
+    if (parent[i] == i) return i;
+    return parent[i] = find(parent, parent[i]); // Path compression
+}
+
+int* findRedundantDirectedConnection(int** edges, int edgesSize, int* edgesColSize, int* returnSize) {
+    int n = edgesSize;
+    int* parent = (int*)malloc((n + 1) * sizeof(int));
+    int* ancestor = (int*)malloc((n + 1) * sizeof(int));
+    
+    int edge1[2] = {0, 0}, edge2[2] = {0, 0};
+    int* conflictEdge = NULL;
+    int* cycleEdge = NULL;
+
+    // Initialize tracking arrays
+    for (int i = 1; i <= n; i++) {
+        parent[i] = 0;   // Track immediate parents
+        ancestor[i] = i; // For Union-Find
+    }
+
+    for (int i = 0; i < n; i++) {
+        int u = edges[i][0];
+        int v = edges[i][1];
+
+        if (parent[v] != 0) {
+            // Node v already has a parent - Case 1: Two Parents
+            edge1[0] = parent[v]; edge1[1] = v;
+            edge2[0] = u;         edge2[1] = v;
+            conflictEdge = edges[i];
+        } else {
+            parent[v] = u;
+            int rootU = find(ancestor, u);
+            int rootV = find(ancestor, v);
+            if (rootU == rootV) {
+                // Cycle detected - Case 2
+                cycleEdge = edges[i];
+            } else {
+                ancestor[rootV] = rootU;
+            }
+        }
+    }
+
+    int* result = (int*)malloc(2 * sizeof(int));
+    *returnSize = 2;
+
+    if (conflictEdge == NULL) {
+        // Only a cycle exists (Case 2)
+        result[0] = cycleEdge[0]; result[1] = cycleEdge[1];
+    } else {
+        if (cycleEdge != NULL) {
+            // Both conflict and cycle exist (Case 3)
+            // The edge that caused the conflict but is part of the cycle is edge1
+            result[0] = edge1[0]; result[1] = edge1[1];
+        } else {
+            // Only a conflict exists, return the last occurring one
+            result[0] = edge2[0]; result[1] = edge2[1];
+        }
+    }
+
+    free(parent);
+    free(ancestor);
+    return result;
+}
+
